@@ -114,4 +114,4 @@ code_change(_OldVsn, State = #id_server_state{}, _Extra) ->
 -spec(my_id() ->
   Id :: string()).
 my_id() ->
-  erl_types:atom_to_string(node()) ++ "_id_server".
+  erl_types:atom_to_string(node()) ++ "/id_server".
