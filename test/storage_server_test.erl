@@ -6,7 +6,7 @@
 
 -include_lib("eunit/include/eunit.hrl").
 
--include("../src/storage_server.hrl").
+-include("../src/storage/storage_server.hrl").
 
 storage_test_() ->
   [
