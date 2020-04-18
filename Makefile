@@ -4,6 +4,7 @@ all: run
 
 build: test
 	rebar3 compile
+	rebar3 edoc
 	#rebar3 release
 
 run: build
