@@ -5,8 +5,7 @@
   {mod, {tep_app, []}},
   {applications,
    [kernel,
-    stdlib,
-     mnesia
+    stdlib
    ]},
   {env,[]},
   {modules, []},
