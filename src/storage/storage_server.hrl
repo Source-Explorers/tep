@@ -3,4 +3,4 @@
 %%% @end
 %%%-------------------------------------------------------------------
 
--record(storage_server_state, {}).
+-record(storage_server_state, { path :: file:name_all(), config :: dets:tab_name() }).

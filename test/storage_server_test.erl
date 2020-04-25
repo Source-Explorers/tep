@@ -8,7 +8,10 @@
 
 -include("../src/storage/storage_server.hrl").
 
-storage_test_() ->
-  [
-    ?_assertEqual({ok, #storage_server_state{}}, storage_server:init(["."]))
-  ].
+-define(DETS_DIR, "./tmp_test").
+-define(CONFIG_DETS, "./tmp_test/config.dets").
+
+storage_init_test() ->
+  {ok, #storage_server_state{ path=?DETS_DIR, config=config }} = storage_server:init(?DETS_DIR),
+  ?assert(dets:is_dets_file(?CONFIG_DETS)),
+  file:delete(?CONFIG_DETS).

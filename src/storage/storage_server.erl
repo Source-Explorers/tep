@@ -7,7 +7,7 @@
 -behaviour(gen_server).
 
 %% API
--export([start_link/0]).
+-export([start_link/1]).
 
 %% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2,
@@ -22,10 +22,10 @@
 %%%===================================================================
 
 %% @doc Spawns the server and registers the local name (unique)
--spec(start_link() ->
+-spec(start_link(Path :: file:name()) ->
   {ok, Pid :: pid()} | ignore | {error, Reason :: term()}).
-start_link() ->
-  gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
+start_link(Path) ->
+  gen_server:start_link({local, ?SERVER}, ?MODULE, Path, []).
 
 %%%===================================================================
 %%% gen_server callbacks
@@ -33,11 +33,12 @@ start_link() ->
 
 %% @private
 %% @doc Initializes the server
--spec(init(Args :: term()) ->
+-spec(init(Path :: file:name()) ->
   {ok, State :: #storage_server_state{}} | {ok, State :: #storage_server_state{}, timeout() | hibernate} |
   {stop, Reason :: term()} | ignore).
-init(_Args) ->
-  {ok, #storage_server_state{}}.
+init(Path) ->
+  {ok, Config} = dets:open_file(config, [{file, Path ++ "/config.dets"}]),
+  {ok, #storage_server_state{ path = Path, config = Config }}.
 
 %% @private
 %% @doc Handling call messages
@@ -91,3 +92,4 @@ code_change(_OldVsn, State = #storage_server_state{}, _Extra) ->
 %%%===================================================================
 %%% Internal functions
 %%%===================================================================
+
