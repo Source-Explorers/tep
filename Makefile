@@ -2,15 +2,15 @@
 
 all: run
 
-build: test
+build:
 	rebar3 compile
 	rebar3 edoc
 	#rebar3 release
 
-run: build
+run: test
 	rebar3 shell
 
-test:
+test: build
 	rebar3 dialyzer
 	rebar3 eunit
 	rebar3 ct
