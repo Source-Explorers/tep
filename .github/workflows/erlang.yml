@@ -8,7 +8,22 @@ on:
 
 jobs:
 
-  build:
+  build_21:
+
+    runs-on: ubuntu-latest
+
+    container:
+
+      image: erlang:21.3.8.15
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Compile
+      run: rebar3 compile
+    - name: Run tests
+      run: rebar3 do eunit, ct, dialyzer
+
+  build_22:
 
     runs-on: ubuntu-latest
 
