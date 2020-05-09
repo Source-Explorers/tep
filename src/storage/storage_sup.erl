@@ -33,10 +33,8 @@ start_link() ->
 %% this function is called by the new process to find out about
 %% restart strategy, maximum restart frequency and child specifications.
 -spec(init(Args :: term()) ->
-  {
-    ok, {SupFlags :: supervisor:sup_flags(),
-    [ChildSpec :: supervisor:child_spec()]}}
-  | ignore).
+  { ok, {SupFlags :: supervisor:sup_flags(), [ChildSpec :: supervisor:child_spec()]}} |
+  ignore).
 init([]) ->
   MaxRestarts = 1000,
   MaxSecondsBetweenRestarts = 3600,
@@ -46,7 +44,7 @@ init([]) ->
     period => MaxSecondsBetweenRestarts},
 
   StorageServer = #{id => main_storage,
-    start => {storage_server, start_link, []}},
+    start => {storage_server, start_link, ["./tmp_test"]}},
 
   {ok, {SupFlags, [StorageServer]}}.
 

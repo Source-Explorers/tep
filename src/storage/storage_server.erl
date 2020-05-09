@@ -78,8 +78,8 @@ handle_info(_Info, State = #storage_server_state{}) ->
 %% with Reason. The return value is ignored.
 -spec(terminate(Reason :: (normal | shutdown | {shutdown, term()} | term()),
     State :: #storage_server_state{}) -> term()).
-terminate(_Reason, _State = #storage_server_state{}) ->
-  ok.
+terminate(_Reason, State = #storage_server_state{}) ->
+  dets:close(State#storage_server_state.config).
 
 %% @private
 %% @doc Convert process state when code is changed

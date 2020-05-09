@@ -16,7 +16,7 @@ init_test_() ->
         period => 3600},
         [
           #{id => main_storage,
-            start => {storage_server, start_link, []}
+            start => {storage_server, start_link, ["./tmp_test"]}
           }]
       }}
     )
