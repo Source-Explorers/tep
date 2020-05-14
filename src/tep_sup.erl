@@ -8,7 +8,6 @@
 -behaviour(supervisor).
 
 -export([start_link/0]).
-
 -export([init/1]).
 
 -define(SERVER, ?MODULE).
@@ -30,10 +29,10 @@ init([]) ->
                  intensity => 0,
                  period => 1},
 
-    Storage =  #{id => storage_sup,
-      start => {'storage_sup', start_link, []},
-      shutdown => infinity,
-      type => supervisor},
+    Storage = #{id => storage_sup,
+                start => {storage_sup, start_link, []},
+                shutdown => infinity,
+                type => supervisor},
 
     {ok, {SupFlags, [Storage]}}.
 

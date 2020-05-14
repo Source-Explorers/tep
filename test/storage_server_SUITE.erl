@@ -8,11 +8,8 @@
 -export([start_storage_server/1, all/0]).
 
 start_storage_server(_) ->
-  {ok, Pid} = storage_server:start_link("."),
-  Pid = whereis(storage_server).
-
+    {ok, Pid} = storage_server:start_link("."),
+    Pid = whereis(storage_server).
 
 all() ->
-  [
-    start_storage_server
-  ].
+    [start_storage_server].
