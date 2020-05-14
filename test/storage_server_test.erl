@@ -6,7 +6,7 @@
 
 -include_lib("eunit/include/eunit.hrl").
 
--include("../src/storage/storage_server.hrl").
+-include("storage_server.hrl").
 
 -define(DETS_DIR, "./tmp_test").
 -define(CONFIG_DETS, "./tmp_test/config.dets").

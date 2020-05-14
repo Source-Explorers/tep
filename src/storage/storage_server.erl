@@ -15,7 +15,7 @@
 
 -define(SERVER, ?MODULE).
 
--include("../storage/storage_server.hrl").
+-include("storage_server.hrl").
 
 %%%===================================================================
 %%% API
