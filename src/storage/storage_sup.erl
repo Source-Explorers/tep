@@ -18,36 +18,36 @@
 %%%===================================================================
 %%% API functions
 %%%===================================================================
-
 %% @doc Starts the supervisor
--spec(start_link() -> {ok, Pid :: pid()} | ignore | {error, Reason :: term()}).
+-spec start_link() -> {ok, Pid :: pid()} | ignore | {error, Reason :: term()}.
 start_link() ->
-  supervisor:start_link({local, ?SERVER}, ?MODULE, []).
+    supervisor:start_link({local, ?SERVER}, ?MODULE, []).
 
 %%%===================================================================
 %%% Supervisor callbacks
 %%%===================================================================
-
 %% @private
 %% @doc Whenever a supervisor is started using supervisor:start_link/[2,3],
 %% this function is called by the new process to find out about
 %% restart strategy, maximum restart frequency and child specifications.
--spec(init(Args :: term()) ->
-  { ok, {SupFlags :: supervisor:sup_flags(), [ChildSpec :: supervisor:child_spec()]}} |
-  ignore).
+-spec init(Args :: term()) ->
+    {ok, {SupFlags :: supervisor:sup_flags(), [ChildSpec :: supervisor:child_spec()]}} |
+    ignore.
 init([]) ->
-  MaxRestarts = 1000,
-  MaxSecondsBetweenRestarts = 3600,
+    MaxRestarts = 1000,
+    MaxSecondsBetweenRestarts = 3600,
 
-  SupFlags = #{strategy => 'one_for_one',
-    intensity => MaxRestarts,
-    period => MaxSecondsBetweenRestarts},
+    SupFlags = #{
+        strategy => 'one_for_one',
+        intensity => MaxRestarts,
+        period => MaxSecondsBetweenRestarts
+    },
 
-  % TODO Change the fixed path to value taken from configuration
-  StorageServer = #{id => main_storage,
-    start => {storage_server, start_link, ["./tmp_test"]}},
+    % TODO Change the fixed path to value taken from configuration
+    StorageServer =
+        #{id => main_storage, start => {storage_server, start_link, ["./tmp_test"]}},
 
-  {ok, {SupFlags, [StorageServer]}}.
+    {ok, {SupFlags, [StorageServer]}}.
 
 %%%===================================================================
 %%% Internal functions
