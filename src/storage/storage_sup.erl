@@ -43,6 +43,7 @@ init([]) ->
     intensity => MaxRestarts,
     period => MaxSecondsBetweenRestarts},
 
+  % TODO Change the fixed path to value taken from configuration
   StorageServer = #{id => main_storage,
     start => {storage_server, start_link, ["./tmp_test"]}},
 
