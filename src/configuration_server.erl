@@ -10,6 +10,13 @@
 
 -include("configuration_server.hrl").
 
+%%% Export these internal functions if eunit is testing this module
+-ifdef(EUNIT).
+
+-export([default_directories/0, config_file_name/0]).
+
+-endif.
+
 %% API
 -export([
     start_link/0,
@@ -22,7 +29,7 @@
 
 -define(SERVER, ?MODULE).
 
--record(configuration_server_state, {}).
+-record(configuration, {config_file_path :: file:filename_all()}).
 
 %%%===================================================================
 %%% API
@@ -51,49 +58,51 @@ get_config_file() ->
 %% @private
 %% @doc Initializes the server
 -spec init(Args :: term()) ->
-    {ok, State :: #configuration_server_state{}} |
-    {ok, State :: #configuration_server_state{}, timeout() | hibernate} |
+    {ok, State :: #configuration{}} |
+    {ok, State :: #configuration{}, timeout() | hibernate} |
     {stop, Reason :: term()} | ignore.
 init([]) ->
-    {ok, #configuration_server_state{}}.
+    case config_file_name() of
+        {ok, ConfigFilePath} -> {ok, #configuration{config_file_path = ConfigFilePath}};
+        {error, Reason} -> {stop, Reason}
+    end.
 
 %% @private
 %% @doc Handling call messages
 -spec handle_call(
     Request :: term(),
     From :: {pid(), Tag :: term()},
-    State :: #configuration_server_state{}
+    State :: #configuration{}
 ) ->
-    {reply, Reply :: term(), NewState :: #configuration_server_state{}} |
-    {reply, Reply :: term(), NewState :: #configuration_server_state{},
-        timeout() | hibernate} |
-    {noreply, NewState :: #configuration_server_state{}} |
-    {noreply, NewState :: #configuration_server_state{}, timeout() | hibernate} |
-    {stop, Reason :: term(), Reply :: term(), NewState :: #configuration_server_state{}} |
-    {stop, Reason :: term(), NewState :: #configuration_server_state{}}.
-handle_call(config_file, _From, State = #configuration_server_state{}) ->
-    {reply, config_file_name(), State};
-handle_call(default_directories, _From, State = #configuration_server_state{}) ->
+    {reply, Reply :: term(), NewState :: #configuration{}} |
+    {reply, Reply :: term(), NewState :: #configuration{}, timeout() | hibernate} |
+    {noreply, NewState :: #configuration{}} |
+    {noreply, NewState :: #configuration{}, timeout() | hibernate} |
+    {stop, Reason :: term(), Reply :: term(), NewState :: #configuration{}} |
+    {stop, Reason :: term(), NewState :: #configuration{}}.
+handle_call(config_file, _From, State = #configuration{}) ->
+    {reply, State#configuration.config_file_path, State};
+handle_call(default_directories, _From, State = #configuration{}) ->
     {reply, {ok, default_directories()}, State};
-handle_call(_Request, _From, State = #configuration_server_state{}) ->
+handle_call(_Request, _From, State = #configuration{}) ->
     {reply, ok, State}.
 
 %% @private
 %% @doc Handling cast messages
--spec handle_cast(Request :: term(), State :: #configuration_server_state{}) ->
-    {noreply, NewState :: #configuration_server_state{}} |
-    {noreply, NewState :: #configuration_server_state{}, timeout() | hibernate} |
-    {stop, Reason :: term(), NewState :: #configuration_server_state{}}.
-handle_cast(_Request, State = #configuration_server_state{}) ->
+-spec handle_cast(Request :: term(), State :: #configuration{}) ->
+    {noreply, NewState :: #configuration{}} |
+    {noreply, NewState :: #configuration{}, timeout() | hibernate} |
+    {stop, Reason :: term(), NewState :: #configuration{}}.
+handle_cast(_Request, State = #configuration{}) ->
     {noreply, State}.
 
 %% @private
 %% @doc Handling all non call/cast messages
--spec handle_info(Info :: timeout() | term(), State :: #configuration_server_state{}) ->
-    {noreply, NewState :: #configuration_server_state{}} |
-    {noreply, NewState :: #configuration_server_state{}, timeout() | hibernate} |
-    {stop, Reason :: term(), NewState :: #configuration_server_state{}}.
-handle_info(_Info, State = #configuration_server_state{}) ->
+-spec handle_info(Info :: timeout() | term(), State :: #configuration{}) ->
+    {noreply, NewState :: #configuration{}} |
+    {noreply, NewState :: #configuration{}, timeout() | hibernate} |
+    {stop, Reason :: term(), NewState :: #configuration{}}.
+handle_info(_Info, State = #configuration{}) ->
     {noreply, State}.
 
 %% @private
@@ -103,21 +112,21 @@ handle_info(_Info, State = #configuration_server_state{}) ->
 %% with Reason. The return value is ignored.
 -spec terminate(
     Reason :: (normal | shutdown | {shutdown, term()} | term()),
-    State :: #configuration_server_state{}
+    State :: #configuration{}
 ) ->
     term().
-terminate(_Reason, _State = #configuration_server_state{}) ->
+terminate(_Reason, _State = #configuration{}) ->
     ok.
 
 %% @private
 %% @doc Convert process state when code is changed
 -spec code_change(
     OldVsn :: term() | {down, term()},
-    State :: #configuration_server_state{},
+    State :: #configuration{},
     Extra :: term()
 ) ->
-    {ok, NewState :: #configuration_server_state{}} | {error, Reason :: term()}.
-code_change(_OldVsn, State = #configuration_server_state{}, _Extra) ->
+    {ok, NewState :: #configuration{}} | {error, Reason :: term()}.
+code_change(_OldVsn, State = #configuration{}, _Extra) ->
     {ok, State}.
 
 %%%===================================================================
@@ -135,18 +144,12 @@ default_directories() ->
 -spec config_file_name() ->
     {ok, FileName :: file:filename_all()} | {error, Reason :: term()}.
 config_file_name() ->
-    PossibleFileNames =
+    CandidateNames =
         [
             filename:absname_join(Path, File)
             || Path <- default_directories(), File <- ?FILE_NAMES
         ],
-    ConfigFiles = [File || File <- PossibleFileNames, filelib:is_regular(File)],
-    Result =
-        if
-            length(ConfigFiles) >= 1 ->
-                [ConfigFile | _Rest] = ConfigFiles,
-                ConfigFile;
-            true ->
-                {error, {no_file, "No config file found"}}
-        end,
-    Result.
+    case [File || File <- CandidateNames, filelib:is_regular(File)] of
+        ConfigFiles when length(ConfigFiles) >= 1 -> {ok, lists:nth(1, ConfigFiles)};
+        _ -> {error, {no_file, "No config file found"}}
+    end.
