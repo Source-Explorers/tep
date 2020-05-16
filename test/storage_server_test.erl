@@ -8,12 +8,16 @@
 
 -include("storage_server.hrl").
 
--define(DETS_DIR, "./tmp_test").
+storage_test_() ->
+	TempDir = string:strip(os:cmd("mktemp -d"), right, $\n),
+	{
+		setup,
+		fun() -> TempDir end,
+		fun(Dir) -> os:cmd("rm -r " ++ Dir) end,
+		{with, TempDir, [fun storage_init/1]}
+	}.
 
--define(CONFIG_DETS, "./tmp_test/config.dets").
-
-storage_init_test() ->
-    {ok, #storage_server_state{path = ?DETS_DIR, config = config}} =
-        storage_server:init(?DETS_DIR),
-    ?assert((dets:is_dets_file(?CONFIG_DETS))),
-    file:delete(?CONFIG_DETS).
+storage_init(TempDir) ->
+	FileName = filename:absname_join(TempDir, "config.dets"),
+	{ok, #storage_server_state{path = TempDir, config = config}} = storage_server:init(TempDir),
+	?assert(dets:is_dets_file(FileName)).
