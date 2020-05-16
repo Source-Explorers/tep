@@ -6,7 +6,8 @@
 %%%-------------------------------------------------------------------
 %% @doc This macro defines the possible file names for the configuration files.
 -define(FILE_NAMES, [
-    "config.ini"
+    "config.ini",
+    "tep.ini"
 ]).
 
 %% @doc This macro defines the directories in which the config file is searched.
