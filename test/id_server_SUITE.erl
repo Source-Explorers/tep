@@ -4,12 +4,10 @@
 
 get_id_test(_) ->
     {ok, _Pid} = id_server:start_link(),
-    {ok, "nonode@nohost/id_server"} =
-        id_server:get_id(node()).
+    {ok, "nonode@nohost/id_server"} = id_server:get_id(node()).
 
 shutdown_test(_) ->
     {ok, _Pid} = id_server:start_link(),
     {ok, stopped} = id_server:shutdown(node()).
 
-all() ->
-    [get_id_test, shutdown_test].
+all() -> [get_id_test, shutdown_test].

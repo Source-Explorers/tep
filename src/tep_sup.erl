@@ -2,12 +2,12 @@
 %% @doc tep top level supervisor.
 %% @end
 %%%-------------------------------------------------------------------
-
 -module(tep_sup).
 
 -behaviour(supervisor).
 
 -export([start_link/0]).
+
 -export([init/1]).
 
 -define(SERVER, ?MODULE).
@@ -25,15 +25,13 @@ start_link() ->
 %%                  type => worker(),       % optional
 %%                  modules => modules()}   % optional
 init([]) ->
-    SupFlags = #{strategy => one_for_all,
-                 intensity => 0,
-                 period => 1},
-
-    Storage = #{id => storage_sup,
-                start => {storage_sup, start_link, []},
-                shutdown => infinity,
-                type => supervisor},
-
+    SupFlags = #{strategy => one_for_all, intensity => 0, period => 1},
+    Storage = #{
+        id => storage_sup,
+        start => {storage_sup, start_link, []},
+        shutdown => infinity,
+        type => supervisor
+    },
     {ok, {SupFlags, [Storage]}}.
 
 %% internal functions

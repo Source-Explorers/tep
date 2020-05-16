@@ -11,5 +11,4 @@ start_storage_server(_) ->
     {ok, Pid} = storage_server:start_link("."),
     Pid = whereis(storage_server).
 
-all() ->
-    [start_storage_server].
+all() -> [start_storage_server].
