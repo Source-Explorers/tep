@@ -1,16 +1,16 @@
 %%%-------------------------------------------------------------------
 %%% @doc
-%%%
+%%% This header file defines a few macros, that TEP needs to find and
+%%% access a configuration file.
 %%% @end
-%%% Created : 15. May 2020 9:54 PM
 %%%-------------------------------------------------------------------
-%% @doc This macro defines the possible file names for the configuration files.
+%% @doc This macro defines the accepted file names for the configuration files.
 -define(FILE_NAMES, [
     "config.ini",
     "tep.ini"
 ]).
 
-%% @doc This macro defines the directories in which the config file is searched.
+%% @doc This macro defines where tep will search for its config files.
 -define(CONFIG_PATHS, [
     filename:absname(""),
     filename:basedir(user_config, "tep/"),

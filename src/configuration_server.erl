@@ -1,6 +1,8 @@
 %%%-------------------------------------------------------------------
 %%% @doc
-%%%
+%%% This module implements the server, that reads and stores the
+%%% configuration for TEP. It presents an interface for other
+%%% processes to access the configuration variables.
 %%% @end
 %%% Created : 15. May 2020 6:49 PM
 %%%-------------------------------------------------------------------
@@ -18,11 +20,7 @@
 -endif.
 
 %% API
--export([
-    start_link/0,
-    get_default_directories/0,
-    get_config_file/0
-]).
+-export([start_link/0, get_default_directories/0, get_config_file/0]).
 
 %% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
