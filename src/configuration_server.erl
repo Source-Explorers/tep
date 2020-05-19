@@ -4,7 +4,6 @@
 %%% configuration for TEP. It presents an interface for other
 %%% processes to access the configuration variables.
 %%% @end
-%%% Created : 15. May 2020 6:49 PM
 %%%-------------------------------------------------------------------
 -module(configuration_server).
 

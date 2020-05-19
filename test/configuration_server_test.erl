@@ -21,7 +21,7 @@ init_test() ->
     meck:new(filelib, [unstick]),
     meck:expect(filelib, is_regular, fun (_Path) -> true end),
     ?assertEqual(
-        {ok,{configuration,filename:absname("config.ini")}},
+        {ok, {configuration, filename:absname("config.ini")}},
         configuration_server:init([])
     ),
     ?assert(meck:validate(filelib)),
