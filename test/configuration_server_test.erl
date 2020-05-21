@@ -14,7 +14,7 @@ existing_config_file_test() ->
     end),
     ?assertEqual(
         {ok, "./tep.ini"},
-        configuration_server:search_config_file(Paths, FileNames)
+        configuration_server:search_for_config_file_path(Paths, FileNames)
     ),
     ?assert(meck:validate(filelib)),
     meck:unload().
@@ -30,7 +30,7 @@ multiple_config_file_test() ->
     end),
     ?assertEqual(
         {ok, "./config.ini"},
-        configuration_server:search_config_file(Paths, FileNames)
+        configuration_server:search_for_config_file_path(Paths, FileNames)
     ),
     ?assert(meck:validate(filelib)),
     meck:unload().
@@ -42,7 +42,7 @@ missing_config_file_test() ->
     meck:expect(filelib, is_regular, fun (_) -> false end),
     ?assertEqual(
         {error, {no_file, "No config file found"}},
-        configuration_server:search_config_file(Paths, FileNames)
+        configuration_server:search_for_config_file_path(Paths, FileNames)
     ),
     ?assert(meck:validate(filelib)),
     meck:unload().

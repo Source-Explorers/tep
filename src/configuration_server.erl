@@ -1,8 +1,7 @@
 %%%-------------------------------------------------------------------
 %%% @doc
-%%% The configuration_server reads and stores the configuration  for
-%%% TEP. It presents an interface for other processes to access
-%%% configuration variables.
+%%% Configuration_server finds, reads and stores the configuration for TEP. It presents an interface
+%%% for other processes to access configuration variables.
 %%% @end
 %%%-------------------------------------------------------------------
 -module(configuration_server).
@@ -15,13 +14,7 @@
 -ifdef(EUNIT).
 
 -export([
-    prepare_default_directories/0,
-    prepare_default_filenames/0,
-    search_config_file/2,
-    select_config_file/1,
-    compile_file_paths/2,
-    filter_existing_files/1,
-    create_configuration/1
+    search_for_config_file_path/2
 ]).
 
 -endif.
@@ -60,7 +53,7 @@ get_default_directories() ->
 get_default_filenames() ->
     gen_server:call(configuration_server, get_default_filenames).
 
-%% @doc Returns the used configuration file
+%% @doc Returns the currently used configuration file
 -spec get_config_file_path() ->
     {ok, file:filename_all()} | {error, Reason :: term()}.
 get_config_file_path() ->
@@ -76,10 +69,12 @@ get_config_file_path() ->
     {ok, State :: #configuration{}, timeout() | hibernate} |
     {stop, Reason :: term()} | ignore.
 init([]) ->
-    Directories = prepare_default_directories(),
-    FileNames = prepare_default_filenames(),
-    ConfigFilePath = search_config_file(Directories, FileNames),
-    create_configuration(ConfigFilePath).
+    ConfigFilePathSearchResult = search_for_config_file_path(
+        ?TEP_DEFAULT_CONFIG_LOCATIONS,
+        ?TEP_DEFAULT_CONFIG_FILE_NAMES
+    ),
+    StoreResult = create_configuration(ConfigFilePathSearchResult),
+    return_from_init(StoreResult).
 
 %% @private
 %% @doc Handling call messages
@@ -97,9 +92,9 @@ init([]) ->
 handle_call(get_config_file_path, _From, State = #configuration{}) ->
     {reply, State#configuration.config_file_path, State};
 handle_call(get_default_directories, _From, State = #configuration{}) ->
-    {reply, {ok, prepare_default_directories()}, State};
+    {reply, {ok, ?TEP_DEFAULT_CONFIG_LOCATIONS}, State};
 handle_call(get_default_filenames, _From, State = #configuration{}) ->
-    {reply, {ok, prepare_default_filenames()}, State};
+    {reply, {ok, ?TEP_DEFAULT_CONFIG_FILE_NAMES}, State};
 handle_call(_Request, _From, State = #configuration{}) ->
     {reply, ok, State}.
 
@@ -149,63 +144,64 @@ code_change(_OldVsn, State = #configuration{}, _Extra) ->
 %%% Internal functions
 %%%===================================================================
 %% @private
-%% @doc This function returns the predefined configuration directories.
--spec prepare_default_directories() ->
-    [file:filename_all()].
-prepare_default_directories() ->
-    ?CONFIG_PATHS.
-
-%% @private
-%% @doc This function returns the predefined filenames for config files.
--spec prepare_default_filenames() ->
-    [file:filename_all()].
-prepare_default_filenames() ->
-    ?FILE_NAMES.
-
-%% @private
-%% @doc This function searches for a configuration file in the default
-%% directories and uses the first found file.
--spec search_config_file(
-    Directories :: [file:filename_all()],
+%% @doc Searches for a configuration file in the default directories and uses the first found file.
+-spec search_for_config_file_path(
+    Directories ::
+        [file:filename_all()],
     FileNames :: [file:filename_all()]
 ) ->
-    {ok, FileName :: file:filename_all()} | {error, Reason :: term()}.
-search_config_file(Directories, FileNames) ->
-    CandidateNames = compile_file_paths(Directories, FileNames),
-    Candidates = filter_existing_files(CandidateNames),
-    select_config_file(Candidates).
+    {ok,
+        FileName ::
+            file:filename_all()} |
+    {error, Reason :: term()}.
+search_for_config_file_path(Directories, FileNames) ->
+    ConfigFileCandidates = list_config_file_path_candidates(Directories, FileNames),
+    RegularFileCandidates = filter_for_regular_files(ConfigFileCandidates),
+    select_candidate(RegularFileCandidates).
 
 %% @private
-%% @doc Compile paths for configuration files from directories nd filenames
--spec compile_file_paths(
+%% @doc Lists all possible paths in which we want to look for configuration files.
+-spec list_config_file_path_candidates(
     Directories :: [file:filename_all()],
     FileNames :: [file:filename_all()]
 ) ->
     [file:filename_all()].
-compile_file_paths(Directories, FileNames) ->
+list_config_file_path_candidates(Directories, FileNames) ->
     [filename:absname_join(Path, File) || Path <- Directories, File <- FileNames].
 
 %% @private
-%% @doc Filter non existing configuration files from the list of candidates
--spec filter_existing_files(CandidateNames :: [file:filename_all()]) ->
+%% @doc Filters non-existent configuration files from the list of candidates.
+-spec filter_for_regular_files(CandidateNames :: [file:filename_all()]) ->
     [file:filename_all()].
-filter_existing_files(CandidateNames) ->
+filter_for_regular_files(CandidateNames) ->
     [CandidateFile || CandidateFile <- CandidateNames, filelib:is_regular(CandidateFile)].
 
 %% @private
-%% @doc Choose the config file from a list of candidates
--spec select_config_file([file:filename_all()]) ->
-    {ok, FileName :: file:filename_all()} | {error, Reason :: term()}.
-select_config_file([ConfigFile | _]) -> {ok, ConfigFile};
-select_config_file([]) -> {error, {no_file, "No config file found"}}.
+%% @doc Chooses the config file from a list of candidates if any are found; otherwise errors.
+-spec select_candidate([file:filename_all()]) ->
+    {ok, FileName :: file:filename_all()} |
+    {error, Reason :: term()}.
+select_candidate([ConfigFile | _]) -> {ok, ConfigFile};
+select_candidate([]) -> {error, {no_file, "No config file found"}}.
 
 %% @private
-%% @doc Create a configuration from a path to a config file
+%% @doc Creates a configuration state from a path to a config file.
 -spec create_configuration(
     {ok, ConfigFile :: file:filename_all()} | {error, Reason :: term()}
 ) ->
-    {ok, #configuration{}} | {stop, Reason :: term()}.
+    {ok, #configuration{}} | {error, Reason :: term()}.
 create_configuration({ok, ConfigFilePath}) ->
     {ok, #configuration{config_file_path = ConfigFilePath}};
 create_configuration({error, Reason}) ->
+    {error, Reason}.
+
+%% @private
+%% @doc Generate return from init depending on results of preparatory functions.
+-spec return_from_init(
+    {ok, State :: #configuration{}} | {error, Reason :: term()}
+) ->
+    {ok, State :: #configuration{}} | {stop, Reason :: term()}.
+return_from_init({ok, State}) ->
+    {ok, State};
+return_from_init({error, Reason}) ->
     {stop, Reason}.
