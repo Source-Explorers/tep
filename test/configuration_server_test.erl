@@ -10,12 +10,17 @@ default_directories_test() ->
 default_filenames_test() ->
     ?assertEqual(?FILE_NAMES, configuration_server:default_filenames()).
 
-config_file_name_test() ->
+choose_file_name_test() ->
+    Paths = ["/etc/tep/", "./"],
+    FileNames = ["config.ini", "tep.ini"],
     meck:new(filelib, [unstick]),
-    meck:expect(filelib, is_regular, fun (_Path) -> true end),
+    meck:expect(filelib, is_regular, fun
+        (Path) when Path == "./tep.ini" -> true;
+        (_) -> false
+    end),
     ?assertEqual(
-        {ok, filename:absname("config.ini")},
-        configuration_server:choose_config_file()
+        {ok, "./tep.ini"},
+        configuration_server:choose_config_file(Paths, FileNames)
     ),
     ?assert(meck:validate(filelib)),
     meck:unload().

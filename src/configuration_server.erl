@@ -14,7 +14,7 @@
 %%% Export these internal functions if eunit is testing this module
 -ifdef(EUNIT).
 
--export([default_directories/0, default_filenames/0, choose_config_file/0]).
+-export([default_directories/0, default_filenames/0, choose_config_file/2]).
 
 -endif.
 
@@ -59,7 +59,9 @@ get_config_file() ->
     {ok, State :: #configuration{}, timeout() | hibernate} |
     {stop, Reason :: term()} | ignore.
 init([]) ->
-    case choose_config_file() of
+    Directories = default_directories(),
+    FileNames = default_filenames(),
+    case choose_config_file(Directories, FileNames) of
         {ok, ConfigFilePath} -> {ok, #configuration{config_file_path = ConfigFilePath}};
         {error, Reason} -> {stop, Reason}
     end.
@@ -144,14 +146,14 @@ default_filenames() ->
 %% @private
 %% @doc This function searches for a configuration file in the default
 %% directories and uses the first found file.
--spec choose_config_file() ->
+-spec choose_config_file(
+    Directories :: [file:filename_all()],
+    FileNames :: [file:filename_all()]
+) ->
     {ok, FileName :: file:filename_all()} | {error, Reason :: term()}.
-choose_config_file() ->
+choose_config_file(Directories, FileNames) ->
     CandidateNames =
-        [
-            filename:absname_join(Path, File)
-            || Path <- default_directories(), File <- default_filenames()
-        ],
+        [filename:absname_join(Path, File) || Path <- Directories, File <- FileNames],
     case [File || File <- CandidateNames, filelib:is_regular(File)] of
         ConfigFiles when length(ConfigFiles) >= 1 -> {ok, lists:nth(1, ConfigFiles)};
         _ -> {error, {no_file, "No config file found"}}
