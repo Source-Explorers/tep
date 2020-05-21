@@ -1,9 +1,10 @@
 %%%-------------------------------------------------------------------
 %%% @doc
-%%% This header file defines a few macros, that TEP needs to find and
-%%% access a configuration file.
+%%% Commonly used macros for filenames and the record for the configuration_server
 %%% @end
 %%%-------------------------------------------------------------------
+-record(configuration, {config_file_path :: file:filename_all()}).
+
 %% @doc This macro defines the accepted file names for the configuration files.
 -define(FILE_NAMES, [
     "config.ini",
