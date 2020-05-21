@@ -54,7 +54,7 @@ start_link() ->
 get_default_directories() ->
     gen_server:call(configuration_server, get_default_directories).
 
-%% @doc Returns a list with the default configuration file locations
+%% @doc Returns a list with the default names for configuration files
 -spec get_default_filenames() ->
     {ok, [file:filename_all()]}.
 get_default_filenames() ->
@@ -148,12 +148,14 @@ code_change(_OldVsn, State = #configuration{}, _Extra) ->
 %%%===================================================================
 %%% Internal functions
 %%%===================================================================
+%% @private
 %% @doc This function returns the predefined configuration directories.
 -spec prepare_default_directories() ->
     [file:filename_all()].
 prepare_default_directories() ->
     ?CONFIG_PATHS.
 
+%% @private
 %% @doc This function returns the predefined filenames for config files.
 -spec prepare_default_filenames() ->
     [file:filename_all()].
