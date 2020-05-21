@@ -196,7 +196,7 @@ create_configuration({error, Reason}) ->
     {error, Reason}.
 
 %% @private
-%% @doc Generate return from init depending on results of preparatory functions.
+%% @doc Generates return from init depending on results of preparatory functions.
 -spec return_from_init(
     {ok, State :: #configuration{}} | {error, Reason :: term()}
 ) ->
