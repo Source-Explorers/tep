@@ -7,6 +7,9 @@
 default_directories_test() ->
     ?assertEqual(?CONFIG_PATHS, configuration_server:default_directories()).
 
+default_filenames_test() ->
+    ?assertEqual(?FILE_NAMES, configuration_server:default_filenames()).
+
 config_file_name_test() ->
     meck:new(filelib, [unstick]),
     meck:expect(filelib, is_regular, fun (_Path) -> true end),

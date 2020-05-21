@@ -14,7 +14,7 @@
 %%% Export these internal functions if eunit is testing this module
 -ifdef(EUNIT).
 
--export([default_directories/0, config_file_name/0]).
+-export([default_directories/0, default_filenames/0, config_file_name/0]).
 
 -endif.
 
@@ -135,6 +135,12 @@ code_change(_OldVsn, State = #configuration{}, _Extra) ->
 default_directories() ->
     ?CONFIG_PATHS.
 
+%% @doc This function returns the predefined filenames for config files.
+-spec default_filenames() ->
+    [file:filename_all()].
+default_filenames() ->
+    ?FILE_NAMES.
+
 %% @private
 %% @doc This function searches for a configuration file in the default
 %% directories and uses the first found file.
@@ -144,7 +150,7 @@ config_file_name() ->
     CandidateNames =
         [
             filename:absname_join(Path, File)
-            || Path <- default_directories(), File <- ?FILE_NAMES
+            || Path <- default_directories(), File <- default_filenames()
         ],
     case [File || File <- CandidateNames, filelib:is_regular(File)] of
         ConfigFiles when length(ConfigFiles) >= 1 -> {ok, lists:nth(1, ConfigFiles)};
