@@ -15,7 +15,7 @@ config_file_name_test() ->
     meck:expect(filelib, is_regular, fun (_Path) -> true end),
     ?assertEqual(
         {ok, filename:absname("config.ini")},
-        configuration_server:config_file_name()
+        configuration_server:choose_config_file()
     ),
     ?assert(meck:validate(filelib)),
     meck:unload().

@@ -14,7 +14,7 @@
 %%% Export these internal functions if eunit is testing this module
 -ifdef(EUNIT).
 
--export([default_directories/0, default_filenames/0, config_file_name/0]).
+-export([default_directories/0, default_filenames/0, choose_config_file/0]).
 
 -endif.
 
@@ -59,7 +59,7 @@ get_config_file() ->
     {ok, State :: #configuration{}, timeout() | hibernate} |
     {stop, Reason :: term()} | ignore.
 init([]) ->
-    case config_file_name() of
+    case choose_config_file() of
         {ok, ConfigFilePath} -> {ok, #configuration{config_file_path = ConfigFilePath}};
         {error, Reason} -> {stop, Reason}
     end.
@@ -144,9 +144,9 @@ default_filenames() ->
 %% @private
 %% @doc This function searches for a configuration file in the default
 %% directories and uses the first found file.
--spec config_file_name() ->
+-spec choose_config_file() ->
     {ok, FileName :: file:filename_all()} | {error, Reason :: term()}.
-config_file_name() ->
+choose_config_file() ->
     CandidateNames =
         [
             filename:absname_join(Path, File)
