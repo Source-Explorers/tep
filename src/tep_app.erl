@@ -8,15 +8,15 @@
 
 -export([start/2, stop/1]).
 
-start(_StartType, _StartArgs) -> tep_sup:start_link(get_argument_string(config_file)).
+start(_StartType, _StartArgs) -> tep_sup:start_link(get_config_file_path(config_file)).
 
 stop(_State) -> ok.
 
 %% internal functions
--spec get_argument_string(Name :: atom()) ->
+-spec get_config_file_path(Name :: atom()) ->
     string().
-get_argument_string(Name) ->
+get_config_file_path(Name) ->
     case init:get_argument(Name) of
-        {ok, [[Value] | _]} -> Value;
+        {ok, [[Value | _] | _]} -> Value;
         _ -> no_path
     end.
