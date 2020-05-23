@@ -12,6 +12,13 @@
 
 -define(SERVER, ?MODULE).
 
+-spec start_link(string() | no_path) ->
+    {ok, pid()} |
+    ignore |
+    {error,
+        {already_started, pid()} |
+        {shutdown, term()} |
+        term()}.
 start_link(ConfigPath) ->
     supervisor:start_link({local, ?SERVER}, ?MODULE, [ConfigPath]).
 
@@ -24,14 +31,20 @@ start_link(ConfigPath) ->
 %%                  shutdown => shutdown(), % optional
 %%                  type => worker(),       % optional
 %%                  modules => modules()}   % optional
-init([_ConfigPath]) ->
+init([ConfigPath]) ->
     SupFlags = #{strategy => one_for_all, intensity => 0, period => 1},
+
+    Configuration = #{
+        id => configuration,
+        start => {configuration_server, start_link, [ConfigPath]}
+    },
+
     Storage = #{
         id => storage_sup,
         start => {storage_sup, start_link, []},
         shutdown => infinity,
         type => supervisor
     },
-    {ok, {SupFlags, [Storage]}}.
+    {ok, {SupFlags, [Configuration, Storage]}}.
 
 %% internal functions
