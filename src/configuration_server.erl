@@ -69,12 +69,12 @@ get_config_file_path() ->
     {ok, State :: #configuration{}, timeout() | hibernate} |
     {stop, Reason :: term()} | ignore.
 init([]) ->
-    ConfigFilePathSearchResult = search_for_config_file_path(
+    ConfigFilePath = search_for_config_file_path(
         ?TEP_DEFAULT_CONFIG_LOCATIONS,
         ?TEP_DEFAULT_CONFIG_FILE_NAMES
     ),
-    StoreResult = create_configuration(ConfigFilePathSearchResult),
-    return_from_init(StoreResult).
+    Configuration = create_configuration(ConfigFilePath),
+    return_from_init(Configuration).
 
 %% @private
 %% @doc Handling call messages
@@ -178,8 +178,12 @@ filter_for_regular_files(CandidateNames) ->
 
 %% @private
 %% @doc Chooses the config file from a list of candidates if any are found; otherwise errors.
--spec select_candidate([file:filename_all()]) ->
-    {ok, FileName :: file:filename_all()} |
+-spec select_candidate([
+    file:filename_all()
+]) ->
+    {ok,
+        FileName ::
+            file:filename_all()} |
     {error, Reason :: term()}.
 select_candidate([ConfigFile | _]) -> {ok, ConfigFile};
 select_candidate([]) -> {error, {no_file, "No config file found"}}.
