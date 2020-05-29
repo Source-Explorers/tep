@@ -7,4 +7,4 @@ get_config_argument_valid_test() ->
     ?assertEqual("test.ini", tep_app:get_config_argument(Valid)).
 
 get_config_argument_invalid_test() ->
-    ?assertEqual(no_path, tep_app:get_config_argument(error)).
+    ?assertEqual(no_custom_config_path, tep_app:get_config_argument(error)).

@@ -12,7 +12,7 @@
 
 -define(SERVER, ?MODULE).
 
--spec start_link(string() | no_path) ->
+-spec start_link(string() | no_custom_config_path) ->
     {ok, pid()} |
     ignore |
     {error,
@@ -22,15 +22,8 @@
 start_link(ConfigPath) ->
     supervisor:start_link({local, ?SERVER}, ?MODULE, [ConfigPath]).
 
-%% sup_flags() = #{strategy => strategy(),         % optional
-%%                 intensity => non_neg_integer(), % optional
-%%                 period => pos_integer()}        % optional
-%% child_spec() = #{id => child_id(),       % mandatory
-%%                  start => mfargs(),      % mandatory
-%%                  restart => restart(),   % optional
-%%                  shutdown => shutdown(), % optional
-%%                  type => worker(),       % optional
-%%                  modules => modules()}   % optional
+-spec init([string()] | [no_custom_config_path]) ->
+    {ok, {supervisor:sup_flags(), [supervisor:child_spec()]}}.
 init([ConfigPath]) ->
     SupFlags = #{strategy => one_for_all, intensity => 0, period => 1},
 

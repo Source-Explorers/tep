@@ -20,13 +20,17 @@ start(_StartType, _StartArgs) -> tep_sup:start_link(get_config_file_path()).
 stop(_State) -> ok.
 
 %% internal functions
+%% @private
+%% @doc Reads the arguments from the erlang startup and checks for config_file argument
 -spec get_config_file_path() ->
-    string() | no_path.
+    string() | no_custom_config_path.
 get_config_file_path() ->
     ArgumentList = init:get_argument(tep_config_file),
     get_config_argument(ArgumentList).
 
+%% @private
+%% @doc Parses list of config_file arguments read from the erlang startup
 -spec get_config_argument({ok, Args :: [Values :: [string()]]} | error) ->
-    string() | no_path.
+    string() | no_custom_config_path.
 get_config_argument({ok, [[Value | _] | _]}) -> Value;
-get_config_argument(_) -> no_path.
+get_config_argument(_) -> no_custom_config_path.
