@@ -14,14 +14,15 @@
 -ifdef(EUNIT).
 
 -export([
-    search_for_config_file_path/2
+    search_for_config_file_path/1,
+    list_config_file_path_candidates/2
 ]).
 
 -endif.
 
 %% API
 -export([
-    start_link/0,
+    start_link/1,
     get_default_directories/0,
     get_default_filenames/0,
     get_config_file_path/0
@@ -36,10 +37,10 @@
 %%% API
 %%%===================================================================
 %% @doc Spawns the server and registers the local name (unique)
--spec start_link() ->
+-spec start_link(string() | no_custom_config_path) ->
     {ok, Pid :: pid()} | ignore | {error, Reason :: term()}.
-start_link() ->
-    gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
+start_link(ConfigPath) ->
+    gen_server:start_link({local, ?SERVER}, ?MODULE, ConfigPath, []).
 
 %% @doc Returns a list with the default configuration file locations
 -spec get_default_directories() ->
@@ -64,17 +65,20 @@ get_config_file_path() ->
 %%%===================================================================
 %% @private
 %% @doc Initializes the server
--spec init(Args :: term()) ->
+-spec init(no_custom_config_path | [file:filename_all()]) ->
     {ok, State :: #configuration{}} |
     {ok, State :: #configuration{}, timeout() | hibernate} |
     {stop, Reason :: term()} | ignore.
-init([]) ->
-    ConfigFilePath = search_for_config_file_path(
+init(no_custom_config_path) ->
+    ConfigFileCandidates = list_config_file_path_candidates(
         ?TEP_DEFAULT_CONFIG_LOCATIONS,
         ?TEP_DEFAULT_CONFIG_FILE_NAMES
     ),
-    Configuration = create_configuration(ConfigFilePath),
-    return_from_init(Configuration).
+    init(ConfigFileCandidates);
+init(ConfigFilePaths) ->
+    ConfigFilePathResult = search_for_config_file_path(ConfigFilePaths),
+    ConfigurationResult = create_configuration(ConfigFilePathResult),
+    return_from_init(ConfigurationResult).
 
 %% @private
 %% @doc Handling call messages
@@ -146,16 +150,11 @@ code_change(_OldVsn, State = #configuration{}, _Extra) ->
 %% @private
 %% @doc Searches for a configuration file in the default directories and uses the first found file.
 -spec search_for_config_file_path(
-    Directories ::
-        [file:filename_all()],
-    FileNames :: [file:filename_all()]
+    ConfigFileCandidates :: [file:filename_all()]
 ) ->
-    {ok,
-        FileName ::
-            file:filename_all()} |
+    {ok, FileName :: file:filename_all()} |
     {error, Reason :: term()}.
-search_for_config_file_path(Directories, FileNames) ->
-    ConfigFileCandidates = list_config_file_path_candidates(Directories, FileNames),
+search_for_config_file_path(ConfigFileCandidates) ->
     RegularFileCandidates = filter_for_regular_files(ConfigFileCandidates),
     select_candidate(RegularFileCandidates).
 

@@ -4,9 +4,18 @@
 
 -include("configuration_server.hrl").
 
-existing_config_file_test() ->
+list_config_file_path_candidates_test() ->
     Paths = ["/etc/tep/", "./"],
     FileNames = ["config.ini", "tep.ini"],
+    CorrectPathList =
+        ["/etc/tep/config.ini", "/etc/tep/tep.ini", "./config.ini", "./tep.ini"],
+    ?assertEqual(
+        CorrectPathList,
+        configuration_server:list_config_file_path_candidates(Paths, FileNames)
+    ).
+
+existing_config_file_test() ->
+    PathList = ["/etc/tep/config.ini", "/etc/tep/tep.ini", "./config.ini", "./tep.ini"],
     meck:new(filelib, [unstick]),
     meck:expect(filelib, is_regular, fun
         (Path) when Path == "./tep.ini" -> true;
@@ -14,14 +23,13 @@ existing_config_file_test() ->
     end),
     ?assertEqual(
         {ok, "./tep.ini"},
-        configuration_server:search_for_config_file_path(Paths, FileNames)
+        configuration_server:search_for_config_file_path(PathList)
     ),
     ?assert(meck:validate(filelib)),
     meck:unload().
 
 multiple_config_file_test() ->
-    Paths = ["/etc/tep/", "./"],
-    FileNames = ["config.ini", "tep.ini"],
+    PathList = ["/etc/tep/config.ini", "/etc/tep/tep.ini", "./config.ini", "./tep.ini"],
     meck:new(filelib, [unstick]),
     meck:expect(filelib, is_regular, fun
         (Path) when Path == "./tep.ini" -> true;
@@ -30,19 +38,18 @@ multiple_config_file_test() ->
     end),
     ?assertEqual(
         {ok, "./config.ini"},
-        configuration_server:search_for_config_file_path(Paths, FileNames)
+        configuration_server:search_for_config_file_path(PathList)
     ),
     ?assert(meck:validate(filelib)),
     meck:unload().
 
 missing_config_file_test() ->
-    Paths = ["/etc/tep/", "./"],
-    FileNames = ["config.ini", "tep.ini"],
+    PathList = ["/etc/tep/config.ini", "/etc/tep/tep.ini", "./config.ini", "./tep.ini"],
     meck:new(filelib, [unstick]),
     meck:expect(filelib, is_regular, fun (_) -> false end),
     ?assertEqual(
         {error, {no_file, "No config file found"}},
-        configuration_server:search_for_config_file_path(Paths, FileNames)
+        configuration_server:search_for_config_file_path(PathList)
     ),
     ?assert(meck:validate(filelib)),
     meck:unload().
@@ -51,12 +58,39 @@ init_test() ->
     meck:new(filelib, [unstick]),
     meck:expect(filelib, is_regular, fun (_Path) -> true end),
     ?assertEqual(
-        {ok, {configuration, filename:absname("config.ini")}},
-        configuration_server:init([])
+        {ok, {configuration, filename:absname_join(filename:absname(""), "config.ini")}},
+        configuration_server:init(no_custom_config_path)
     ),
     ?assert(meck:validate(filelib)),
     meck:expect(filelib, is_regular, fun (_Path) -> false end),
     ?assertEqual(
         {stop, {no_file, "No config file found"}},
-        configuration_server:init([])
-    ).
+        configuration_server:init(no_custom_config_path)
+    ),
+    meck:unload(filelib).
+
+init_with_valid_config_flag_test() ->
+    meck:new(filelib, [unstick, passthrough]),
+    meck:expect(filelib, is_regular, fun
+        ("./tep_test.ini") -> true;
+        (Path) -> meck:passthrough([Path])
+    end),
+    ?assertEqual(
+        {ok, {configuration, "./tep_test.ini"}},
+        configuration_server:init(["./tep_test.ini"])
+    ),
+    ?assert(meck:validate(filelib)),
+    meck:unload(filelib).
+
+init_with_invalid_config_flag_test() ->
+    meck:new(filelib, [unstick, passthrough]),
+    meck:expect(filelib, is_regular, fun
+        ("./tep_test.ini") -> false;
+        (Path) -> meck:passthrough([Path])
+    end),
+    ?assertEqual(
+        {stop, {no_file, "No config file found"}},
+        configuration_server:init(["./tep_test.ini"])
+    ),
+    ?assert(meck:validate(filelib)),
+    meck:unload(filelib).
