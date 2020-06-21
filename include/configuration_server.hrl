@@ -7,8 +7,8 @@
 
 %% @doc This macro defines the accepted file names for the configuration files.
 -define(TEP_DEFAULT_CONFIG_FILE_NAMES, [
-    "config.ini",
-    "tep.ini"
+    "config.toml",
+    "tep.toml"
 ]).
 
 %% @doc This macro defines where tep will search for its config files.

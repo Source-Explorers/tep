@@ -11,9 +11,9 @@ run: test
 	rebar3 shell
 
 test: build
-	rebar3 dialyzer
-	rebar3 eunit
-	rebar3 ct
+	rebar3 as test dialyzer
+	rebar3 as test eunit
+	rebar3 as test ct
 
 clean:
 	rm -rf ./_build
