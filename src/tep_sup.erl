@@ -32,12 +32,17 @@ init([ConfigPath]) ->
         start => {configuration_server, start_link, [ConfigPath]}
     },
 
+    Date = #{
+        id => date,
+        start => {date_server, start_link, []}
+    },
+
     Storage = #{
         id => storage_sup,
         start => {storage_sup, start_link, []},
         shutdown => infinity,
         type => supervisor
     },
-    {ok, {SupFlags, [Configuration, Storage]}}.
+    {ok, {SupFlags, [Configuration, Storage, Date]}}.
 
 %% internal functions
