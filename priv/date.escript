@@ -1,7 +1,9 @@
 #!/usr/bin/env escript
 %% -*- erlang -*-
-%%! -sname date
+%%! -name date
 
 main(_) ->
-  {Date, _} = gen_server:call({date_server, tep@localhost}, get_date, 10000),
+  Node = list_to_atom("tep@" ++ net_adm:localhost()),
+  net_kernel:connect_node(Node),
+  {Date, _} = gen_server:call({date_server, Node}, get_date, 2000),
   io:write(Date).
