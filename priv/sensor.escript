@@ -3,4 +3,4 @@
 %%! -sname sensor
 
 main(_) ->
-  io:write("not yet implemented").
+  io:fwrite("not yet implemented~n").

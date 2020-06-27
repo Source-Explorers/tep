@@ -16,3 +16,6 @@ deps
 _build/
 _checkouts/
 doc/
+
+# test fixtures
+tmp_test/
