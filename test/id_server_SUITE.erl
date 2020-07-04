@@ -4,7 +4,8 @@
 
 get_id_test(_) ->
     {ok, _Pid} = id_server:start_link(),
-    {ok, "nonode@nohost/id_server"} = id_server:get_id(node()).
+    Nodename = atom_to_list(node()) ++ "/id_server",
+    {ok, Nodename} = id_server:get_id(node()).
 
 shutdown_test(_) ->
     {ok, _Pid} = id_server:start_link(),
