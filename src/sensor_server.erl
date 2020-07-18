@@ -3,35 +3,42 @@
 -behaviour(gen_server).
 
 %% API
--export([start_link/1]).
+-export([start_link/3, call_sensor/2]).
 
 %% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
 -define(SERVER, ?MODULE).
 
--record(sensor_server_state, {capabilities :: map()}).
+-record(sensor_server_state, {capabilityfunction :: fun(), arity :: non_neg_integer()}).
 
 %%%===================================================================
 %%% API
 %%%===================================================================
 %% @doc Spawns the server and registers the local name (unique)
--spec start_link(Capabilities :: map()) ->
+-spec start_link(ServerName :: atom(), CapabilityFunction :: map(), Arity :: non_neg_integer()) ->
     {ok, Pid :: pid()} | ignore | {error, Reason :: term()}.
-start_link(Capabilities) ->
-    gen_server:start_link({local, ?SERVER}, ?MODULE, Capabilities, []).
+start_link(ServerName, CapabilityFunction, Arity) ->
+    gen_server:start_link({local, ServerName}, ?MODULE, {CapabilityFunction, Arity}, []).
+
+-spec call_sensor(ServerName :: atom(), Arguments :: [atom()]) ->
+    {ok, term()} | {error, badarg}.
+call_sensor(ServerName, []) ->
+    gen_server:call(ServerName, {get_sensor_data});
+call_sensor(ServerName, Arguments) ->
+    gen_server:call(ServerName, {get_sensor_data, Arguments}).
 
 %%%===================================================================
 %%% gen_server callbacks
 %%%===================================================================
 %% @private
 %% @doc Initializes the server
--spec init(Capabilities :: map()) ->
+-spec init({CapabilityFunction :: fun(), Arity :: non_neg_integer()}) ->
     {ok, State :: #sensor_server_state{}} |
     {ok, State :: #sensor_server_state{}, timeout() | hibernate} |
     {stop, Reason :: term()} | ignore.
-init(Capabilities) ->
-    {ok, #sensor_server_state{capabilities = Capabilities}}.
+init({CapabilityFunction, Arity}) ->
+    {ok, #sensor_server_state{capabilityfunction = CapabilityFunction, arity = Arity}}.
 
 %% @private
 %% @doc Handling call messages
@@ -46,9 +53,14 @@ init(Capabilities) ->
     {noreply, NewState :: #sensor_server_state{}, timeout() | hibernate} |
     {stop, Reason :: term(), Reply :: term(), NewState :: #sensor_server_state{}} |
     {stop, Reason :: term(), NewState :: #sensor_server_state{}}.
-handle_call({get_sensor_data, Capability}, _From, State = #sensor_server_state{}) ->
-    SensorFunction = maps:get(Capability, State#sensor_server_state.capabilities),
+handle_call({get_sensor_data}, _From, State = #sensor_server_state{}) when State#sensor_server_state.arity =:= 0 ->
+    SensorFunction = State#sensor_server_state.capabilityfunction,
     {reply, {ok, SensorFunction()}, State};
+handle_call({get_sensor_data, Arguments}, _From, State = #sensor_server_state{}) when length(Arguments) =:= State#sensor_server_state.arity ->
+    SensorFunction = State#sensor_server_state.capabilityfunction,
+    {reply, {ok, SensorFunction(Arguments)}, State};
+handle_call({get_sensor_data, _Arguments}, _From, State = #sensor_server_state{}) ->
+    {reply, {error, badarg}, State};
 handle_call(_Request, _From, State = #sensor_server_state{}) ->
     {reply, ok, State}.
 
