@@ -32,18 +32,19 @@ init([ConfigPath]) ->
         start => {configuration_server, start_link, [ConfigPath]}
     },
 
-    Sensor = #{
-        id => sensor,
-        start =>
-            {sensor_server, start_link, [#{date => fun () -> calendar:local_time() end}]}
-    },
-
     Storage = #{
         id => storage_sup,
         start => {storage_sup, start_link, []},
         shutdown => infinity,
         type => supervisor
     },
-    {ok, {SupFlags, [Configuration, Storage, Sensor]}}.
+
+    Capability = #{
+        id => capability_sup,
+        start => {capability_sup, start_link, []},
+        shutdown => infinity,
+        type => supervisor
+    },
+    {ok, {SupFlags, [Configuration, Storage, Capability]}}.
 
 %% internal functions
