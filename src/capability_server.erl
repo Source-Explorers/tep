@@ -3,7 +3,7 @@
 -behaviour(gen_server).
 
 %% API
--export([start_link/0, start_sensor_server/2, stop_sensor_server/1, list_sensor_servers/0]).
+-export([start_link/1, start_sensor_server/2, stop_sensor_server/1, list_sensor_servers/0]).
 
 %% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
@@ -16,10 +16,10 @@
 %%% API
 %%%===================================================================
 %% @doc Spawns the server and registers the local name (unique)
--spec start_link() ->
+-spec start_link(SupervisorName :: atom()) ->
     {ok, Pid :: pid()} | ignore | {error, Reason :: term()}.
-start_link() ->
-    gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
+start_link(SupervisorName) ->
+    gen_server:start_link({local, ?SERVER}, ?MODULE, [SupervisorName], []).
 
 -spec start_sensor_server(SensorName :: atom(), SensorFunction :: fun()) ->
     {ok, Ref :: pid()} | {error, Reason :: term()}.
@@ -45,8 +45,8 @@ list_sensor_servers() ->
     {ok, State :: #capability_server_state{}} |
     {ok, State :: #capability_server_state{}, timeout() | hibernate} |
     {stop, Reason :: term()} | ignore.
-init([]) ->
-    {ok, #capability_server_state{}}.
+init([SupervisorName]) ->
+    {ok, #capability_server_state{supervisor_name = SupervisorName}}.
 
 %% @private
 %% @doc Handling call messages
@@ -63,7 +63,7 @@ init([]) ->
     {stop, Reason :: term(), Reply :: term(), NewState :: #capability_server_state{}} |
     {stop, Reason :: term(), NewState :: #capability_server_state{}}.
 handle_call(list_sensors, _From, State = #capability_server_state{}) ->
-    {reply, {ok, list_sensors()}, State};
+    {reply, {ok, list_sensors(State#capability_server_state.supervisor_name)}, State};
 handle_call({stop_sensor, SensorName}, _From, State = #capability_server_state{}) ->
     {reply, stop_sensor(SensorName), State};
 handle_call(
@@ -137,8 +137,8 @@ stop_sensor(SensorName) ->
     supervisor:terminate_child(capability_sup, SensorName),
     supervisor:delete_child(capability_sup, SensorName).
 
--spec list_sensors() ->
+-spec list_sensors(SupervisorName :: atom()) ->
     [{term(), pid()}].
-list_sensors() ->
-    [{Id, Pid} || {Id, Pid, worker, [sensor_server]} <- supervisor:which_children(capability_sup)].
+list_sensors(SupervisorName) ->
+    [{Id, Pid} || {Id, Pid, worker, [sensor_server]} <- supervisor:which_children(SupervisorName)].
 

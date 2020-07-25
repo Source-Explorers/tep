@@ -40,7 +40,7 @@ init([]) ->
 
     CapServer = #{
         id => starter,
-        start => {capability_server, start_link, []}
+        start => {capability_server, start_link, [?SERVER]}
     },
 
     Date = #{

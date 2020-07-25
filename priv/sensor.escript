@@ -2,7 +2,8 @@
 %% -*- erlang -*-
 %%! -sname sensor
 connect() ->
-  Node = list_to_atom("tep@" ++ net_adm:localhost()),
+  {ok, Hostname} = inet:gethostname(),
+  Node = list_to_atom("tep@" ++ Hostname),
   net_kernel:connect_node(Node),
   Node.
 
