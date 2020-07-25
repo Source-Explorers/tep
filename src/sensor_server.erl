@@ -3,7 +3,7 @@
 -behaviour(gen_server).
 
 %% API
--export([start_link/3, call_sensor/2]).
+-export([start_link/3, call_sensor/2, call_sensor/1]).
 
 %% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
@@ -16,7 +16,11 @@
 %%% API
 %%%===================================================================
 %% @doc Spawns the server and registers the local name (unique)
--spec start_link(ServerName :: atom(), CapabilityFunction :: map(), Arity :: non_neg_integer()) ->
+-spec start_link(
+    ServerName :: atom(),
+    CapabilityFunction :: map(),
+    Arity :: non_neg_integer()
+) ->
     {ok, Pid :: pid()} | ignore | {error, Reason :: term()}.
 start_link(ServerName, CapabilityFunction, Arity) ->
     gen_server:start_link({local, ServerName}, ?MODULE, {CapabilityFunction, Arity}, []).
@@ -27,6 +31,11 @@ call_sensor(ServerName, []) ->
     gen_server:call(ServerName, {get_sensor_data});
 call_sensor(ServerName, Arguments) ->
     gen_server:call(ServerName, {get_sensor_data, Arguments}).
+
+-spec call_sensor(ServerName :: atom()) ->
+    {ok, term()} | {error, badarg}.
+call_sensor(ServerName) ->
+    gen_server:call(ServerName, {get_sensor_data}).
 
 %%%===================================================================
 %%% gen_server callbacks
@@ -53,10 +62,12 @@ init({CapabilityFunction, Arity}) ->
     {noreply, NewState :: #sensor_server_state{}, timeout() | hibernate} |
     {stop, Reason :: term(), Reply :: term(), NewState :: #sensor_server_state{}} |
     {stop, Reason :: term(), NewState :: #sensor_server_state{}}.
-handle_call({get_sensor_data}, _From, State = #sensor_server_state{}) when State#sensor_server_state.arity =:= 0 ->
+handle_call(get_sensor_data, _From, State = #sensor_server_state{})
+        when State#sensor_server_state.arity =:= 0 ->
     SensorFunction = State#sensor_server_state.capabilityfunction,
     {reply, {ok, SensorFunction()}, State};
-handle_call({get_sensor_data, Arguments}, _From, State = #sensor_server_state{}) when length(Arguments) =:= State#sensor_server_state.arity ->
+handle_call({get_sensor_data, Arguments}, _From, State = #sensor_server_state{})
+        when length(Arguments) =:= State#sensor_server_state.arity ->
     SensorFunction = State#sensor_server_state.capabilityfunction,
     {reply, {ok, SensorFunction(Arguments)}, State};
 handle_call({get_sensor_data, _Arguments}, _From, State = #sensor_server_state{}) ->
